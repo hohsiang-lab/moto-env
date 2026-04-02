@@ -1,9 +1,6 @@
 FROM motoserver/moto:latest
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    awscli \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache aws-cli curl
 
 COPY entrypoint.sh /entrypoint.sh
 COPY init.sh /init.sh
