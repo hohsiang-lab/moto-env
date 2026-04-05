@@ -33,6 +33,27 @@ if [ -n "${COGNITO_POOL_NAME:-}" ]; then
     --query 'UserPoolClient.ClientId' --output text)
   echo "✅ App client created: $CLIENT_ID"
 
+  # Optional: enable TOTP MFA at the user pool level.
+  # Values:
+  # - COGNITO_TOTP_ENABLED=true      -> software token MFA optional
+  # - COGNITO_TOTP_REQUIRED=true     -> software token MFA required
+  if [ "${COGNITO_TOTP_ENABLED:-}" = "true" ] || [ "${COGNITO_TOTP_REQUIRED:-}" = "true" ]; then
+    MFA_CONFIGURATION="OPTIONAL"
+    if [ "${COGNITO_TOTP_REQUIRED:-}" = "true" ]; then
+      MFA_CONFIGURATION="ON"
+    fi
+
+    aws cognito-idp set-user-pool-mfa-config \
+      --endpoint-url "$ENDPOINT" \
+      --region "$REGION" \
+      --user-pool-id "$POOL_ID" \
+      --mfa-configuration "$MFA_CONFIGURATION" \
+      --software-token-mfa-configuration Enabled=true \
+      > /dev/null
+
+    echo "✅ Cognito TOTP enabled for pool: $POOL_ID (mode=$MFA_CONFIGURATION)"
+  fi
+
   # Create users from COGNITO_USERS env
   if [ -n "${COGNITO_USERS:-}" ]; then
     OLD_IFS="$IFS"
