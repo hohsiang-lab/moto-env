@@ -15,6 +15,7 @@ services:
       COGNITO_POOL_NAME: ci-pool
       COGNITO_USERS: "testuser:Password123!"
       COGNITO_TOTP_ENABLED: "true"
+      COGNITO_TOTP_USERS: "testuser:Password123!"
       S3_BUCKETS: "my-bucket,another-bucket"
     ports:
       - 5000:5000
@@ -34,11 +35,25 @@ services:
 | `COGNITO_USERS` | Comma-separated `username:password` pairs | `alice:Pass1!,bob:Pass2!` |
 | `COGNITO_TOTP_ENABLED` | Enable software token MFA for the pool in OPTIONAL mode | `true` |
 | `COGNITO_TOTP_REQUIRED` | Enable software token MFA for the pool in REQUIRED mode (`MFA_CONFIGURATION=ON`) | `true` |
+| `COGNITO_TOTP_USERS` | Comma-separated `username:password` pairs to auto-enroll in TOTP MFA | `admin:Pass1!` |
 | `AWS_REGION` | AWS region (default: `us-east-1`) | `ap-northeast-1` |
 
 Pool ID is deterministic: same region + pool name always produces the same ID (`MOTO_COGNITO_IDP_USER_POOL_ID_STRATEGY=HASH`).
 
-TOTP support is enabled in the image with `MOTO_COGNITO_IDP_USER_POOL_ENABLE_TOTP=true`. To actually trigger MFA flows in tests, you still need to associate and verify a software token for individual users (for example via `AssociateSoftwareToken`, `VerifySoftwareToken`, and `AdminSetUserMFAPreference`). This image now enables the pool-level prerequisite so CI/bootstrap scripts can perform that user-level setup.
+TOTP support is enabled in the image with `MOTO_COGNITO_IDP_USER_POOL_ENABLE_TOTP=true`.
+
+#### TOTP user enrollment
+
+To pre-enroll users in TOTP MFA during init, set `COGNITO_TOTP_USERS` with the same `username:password` format as `COGNITO_USERS`. Users listed must already exist (create them via `COGNITO_USERS` first). The init script automatically:
+
+1. Signs in the user (`AdminInitiateAuth`)
+2. Associates a software token (`AssociateSoftwareToken`)
+3. Generates and verifies a TOTP code (`VerifySoftwareToken`)
+4. Enables TOTP as preferred MFA (`AdminSetUserMFAPreference`)
+
+After enrollment, `InitiateAuth` for these users will return a `SOFTWARE_TOKEN_MFA` challenge instead of tokens directly. Moto uses a hardcoded TOTP secret (`asdfasdfasdf`), so test code can generate valid TOTP codes from this known secret.
+
+You must also set `COGNITO_TOTP_ENABLED=true` or `COGNITO_TOTP_REQUIRED=true` to enable MFA at the pool level.
 
 ### S3
 
