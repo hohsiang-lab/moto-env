@@ -17,7 +17,9 @@ echo "✅ Moto server ready"
 # 3. Run init script to seed resources
 /init.sh
 
+# 4. Signal that all resources (Cognito, S3, etc.) are ready
+touch /tmp/moto-ready
 echo "✅ Init complete, moto-env ready"
 
-# 4. Keep container alive by waiting on moto process
+# 5. Keep container alive by waiting on moto process
 wait $MOTO_PID

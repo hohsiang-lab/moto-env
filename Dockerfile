@@ -15,4 +15,7 @@ ENV MOTO_COGNITO_IDP_USER_POOL_ENABLE_TOTP=true
 
 EXPOSE 5000
 
+HEALTHCHECK --interval=5s --timeout=3s --retries=24 \
+  CMD test -f /tmp/moto-ready || exit 1
+
 ENTRYPOINT ["/entrypoint.sh"]
