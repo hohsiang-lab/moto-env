@@ -20,9 +20,9 @@ services:
     ports:
       - 5000:5000
     options: >-
-      --health-cmd "curl -sf http://localhost:5000/"
+      --health-cmd "test -f /tmp/moto-ready"
       --health-interval 5s
-      --health-retries 12
+      --health-retries 24
 ```
 
 ## Environment Variables
@@ -67,4 +67,6 @@ Moto server runs on port `5000`. Use `http://localhost:5000` (or container hostn
 
 ## Health Check
 
-`GET http://localhost:5000/` returns `200 OK` when ready.
+The image writes `/tmp/moto-ready` after all init resources (Cognito pools, S3 buckets, etc.) are fully provisioned. Use `test -f /tmp/moto-ready` as the health check to ensure the container is truly ready — not just that the moto server port is listening.
+
+The Dockerfile includes a default `HEALTHCHECK` directive, but GitHub Actions service containers ignore Dockerfile `HEALTHCHECK`. For CI, pass the health check explicitly via `--health-cmd`.
