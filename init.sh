@@ -174,12 +174,24 @@ if [ -n "${S3_BUCKETS:-}" ]; then
   IFS=','
   for bucket in $S3_BUCKETS; do
     if [ -n "$bucket" ]; then
-      aws s3api create-bucket \
+      echo "🔧 Creating S3 bucket: $bucket (region=$REGION)"
+      if [ "$REGION" = "us-east-1" ]; then
+        aws s3api create-bucket \
+          --endpoint-url "$ENDPOINT" \
+          --region "$REGION" \
+          --bucket "$bucket"
+      else
+        aws s3api create-bucket \
+          --endpoint-url "$ENDPOINT" \
+          --region "$REGION" \
+          --bucket "$bucket" \
+          --create-bucket-configuration "LocationConstraint=$REGION"
+      fi
+      # Verify bucket exists
+      aws s3api head-bucket \
         --endpoint-url "$ENDPOINT" \
         --region "$REGION" \
-        --bucket "$bucket" \
-        ${REGION:+--create-bucket-configuration LocationConstraint="$REGION"} \
-        > /dev/null 2>&1 || true
+        --bucket "$bucket"
       echo "✅ S3 bucket created: $bucket"
     fi
   done
