@@ -2,7 +2,9 @@
 set -e
 
 # 1. Start moto server in background
-python -m moto.server -H 0.0.0.0 -p 5000 &
+# Uses start_moto_with_smtp.py which monkey-patches CognitoIdpBackend.forgot_password
+# to send verification codes via SMTP when SMTP_SERVER env var is set.
+python /start_moto_with_smtp.py -H 0.0.0.0 -p 5000 &
 MOTO_PID=$!
 
 # 2. Wait for moto to be ready

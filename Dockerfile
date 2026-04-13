@@ -4,6 +4,7 @@ RUN apk add --no-cache aws-cli curl
 
 COPY entrypoint.sh /entrypoint.sh
 COPY init.sh /init.sh
+COPY start_moto_with_smtp.py /start_moto_with_smtp.py
 RUN chmod +x /entrypoint.sh /init.sh
 
 # HASH strategy makes pool ID and client ID deterministic (same inputs → same IDs)
