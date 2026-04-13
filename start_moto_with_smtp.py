@@ -11,6 +11,20 @@ moto's confirm_forgot_password accepts any code that does NOT start with
 "moto-confirmation-code:" as valid, so the extracted digit code works correctly.
 """
 
+import importlib.util
+import moto
+
+# motoserver/moto base image installs moto in a way that leaves moto.__file__ = None,
+# which causes moto.core.loaders to crash on os.path.abspath(moto.__file__).
+# Resolve it before importing any moto submodule.
+if moto.__file__ is None:
+    spec = importlib.util.find_spec("moto")
+    if spec and spec.origin:
+        moto.__file__ = spec.origin
+    elif spec and spec.submodule_search_locations:
+        import os as _os
+        moto.__file__ = _os.path.join(list(spec.submodule_search_locations)[0], "__init__.py")
+
 import os
 import smtplib
 from email.message import EmailMessage
